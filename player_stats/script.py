@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 url = 'https://www.transfermarkt.de/fsv-zwickau/startseite/verein/275'
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) Gecko/20100101 Firefox/101.0'}
 
-
 # send a request to the URL and get the response
 response = requests.get(url, headers=headers)
 
@@ -35,5 +34,10 @@ for row in table.find_all('tr', {'class': ['odd', 'even']}):
     birthPlace = player_soup.find('span', {'itemprop': 'birthPlace'}).text.strip("\n").strip()
     height = player_soup.find('span', {'itemprop': 'height'}).text.strip("\n").strip()
 
-    # print the player name and statistics
-    print(name, number, country, market_value, birthDate, birthPlace)
+    stats_1_keys = [x.text for x in player_soup.find_all("span", {"class": "info-table__content info-table__content--regular"})]
+    stats_1_values = [x.text for x in player_soup.find_all("span", {"class": "info-table__content info-table__content--bold"})]
+    print(dict(zip(stats_1_keys, stats_1_values)))
+
+    stats_2_keys = [x.text for x in player_soup.find_all("span", {"class": "info-table__content info-table__content--regular"})]
+    stats_2_values = [x.text for x in player_soup.find_all("span", {"class": "info-table__content info-table__content--bold"})]
+
