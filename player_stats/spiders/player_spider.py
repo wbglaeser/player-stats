@@ -2,14 +2,13 @@ import re
 from typing import Dict
 
 from player_stats.spiders.base_spider import BaseSpider
-from player_stats.models.Player import Player
+from player_stats.models.player import Player
 
 
 class PlayerSpider(BaseSpider):
 
     def __init__(self, url):
         super().__init__(url)
-        self.soup = self.cook_the_soup()
 
     def _name(self) -> str:
         name_raw = self.soup.find("h1", {"class": "data-header__headline-wrapper"}).text
@@ -32,30 +31,31 @@ class PlayerSpider(BaseSpider):
         stats_dict = dict(zip(stats_keys, stats_values))
 
         base_state = {
-            "birth_date": stats_dict["Geburtsdatum"],
-            "birth_place": stats_dict["Geburtsort"],
-            "age": stats_dict["Alter"],
-            "height": stats_dict["Größe"],
-            "nationality": stats_dict["Nationalität"],
-            "position": stats_dict["Position"],
-            "foot": stats_dict["Fuß"],
-            "agent": stats_dict["Spielerberater"],
-            "current_club": stats_dict["Aktueller Verein"],
-            "current_club_since": stats_dict["Im Team seit"],
-            "contract_until": stats_dict["Vertrag bis"],
-            "last_contract_extension": stats_dict["Letzte Verlängerung"]
+            "birth_date": stats_dict.get("Geburtsdatum", None),
+            "birth_place": stats_dict.get("Geburtsort", None),
+            "age": int(stats_dict.get("Alter", None)),
+            "height": int(re.sub(r"[,m]", "", stats_dict.get("Größe", None).replace(u'\xa0', u' '))),
+            "nationality": re.sub(r" +", r" ", stats_dict.get("Nationalität", None).replace(u'\xa0', u' ')).split(" "),
+            "position": stats_dict.get("Position", None),
+            "foot": stats_dict.get("Fuß", None),
+            "agent": stats_dict.get("Spielerberater", None),
+            "current_club": stats_dict.get("Aktueller Verein", None),
+            "current_club_since": stats_dict.get("Im Team seit", None),
+            "contract_until": stats_dict.get("Vertrag bis", None),
+            "last_contract_extension": stats_dict.get("Letzte Verlängerung", None)
         }
         return base_state
 
-    def build_player(self) -> Player:
+    def build_entity(self) -> Player:
+        name = self._name()
+        print("Scraping player: " + name)
         base_stats = self._player_base_stats()
         return Player(
-            name=self._name(),
+            name=name,
             age=base_stats["age"],
             birth_date=base_stats["birth_date"],
             height=base_stats["height"],
             place_of_birth=base_stats["birth_place"],
-            country_of_birth=base_stats["nationality"],
             citenzenship=base_stats["nationality"],
             position=base_stats["position"],
             foot=base_stats["foot"],
