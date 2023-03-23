@@ -22,20 +22,28 @@ class PlayerSpider(BaseSpider):
         return int(re.sub(pattern, "", number_raw).strip())
 
     def _player_base_stats(self) -> Dict[str, str]:
-        stats_keys = [x.text for x in
+        stats_keys = [re.sub(r"[\n:]", "", x.text).strip() for x in
                       self.soup.find_all("span", {"class": "info-table__content info-table__content--regular"})]
-        stats_values = [x.text for x in
-                        self.soup.find_all("span", {"class": "info-table__content info-table__content--bold"})]
+        stats_values = [re.sub(r"[\n:]", "", x.text).strip() for x in
+                        self.soup.find_all("span", {"class": [
+                            "info-table__content info-table__content--bold",
+                            "info-table__content info-table__content--bold info-table__content--flex"
+                        ]})]
         stats_dict = dict(zip(stats_keys, stats_values))
 
         base_state = {
-            "birth_date": stats_dict["Geburtsdatum:"],
-            "birth_place": stats_dict["Geburtsort:"],
-            "age": stats_dict["Alter:"],
-            "height": stats_dict["Größe:"],
-            "nationality": stats_dict["Nationalität:"],
-            "position": stats_dict["Position:"],
-            "foot": stats_dict["Fuß:"]
+            "birth_date": stats_dict["Geburtsdatum"],
+            "birth_place": stats_dict["Geburtsort"],
+            "age": stats_dict["Alter"],
+            "height": stats_dict["Größe"],
+            "nationality": stats_dict["Nationalität"],
+            "position": stats_dict["Position"],
+            "foot": stats_dict["Fuß"],
+            "agent": stats_dict["Spielerberater"],
+            "current_club": stats_dict["Aktueller Verein"],
+            "current_club_since": stats_dict["Im Team seit"],
+            "contract_until": stats_dict["Vertrag bis"],
+            "last_contract_extension": stats_dict["Letzte Verlängerung"]
         }
         return base_state
 
@@ -51,4 +59,9 @@ class PlayerSpider(BaseSpider):
             citenzenship=base_stats["nationality"],
             position=base_stats["position"],
             foot=base_stats["foot"],
+            agent=base_stats["agent"],
+            current_club=base_stats["current_club"],
+            current_club_since=base_stats["current_club_since"],
+            contract_until=base_stats["contract_until"],
+            last_contract_extension=base_stats["last_contract_extension"]
         )

@@ -12,8 +12,9 @@ class Player:
     citenzenship: str
     position: str
     foot: str
-    # current_club: str
-    # joined_current_club: datetime.date
-    # contract_expires: datetime.date
-    # market_value: int
-
+    agent: str
+    current_club: str
+    current_club_since: str
+    current_club_since: str
+    contract_until: str
+    last_contract_extension: str
