@@ -1,7 +1,11 @@
 from requests import Response, get
 from bs4 import BeautifulSoup
 from typing import Optional
+import tempfile
+import json
+from dataclasses import asdict
 
+from player_stats.services.gcs_service import GcsService
 from player_stats.models.base_entity import BaseEntity
 from player_stats.services.proxy_service import ProxyFetcher
 
@@ -12,6 +16,7 @@ class BaseSpider:
 
     def __init__(self, url):
         self.soup = None
+        self.entity: Optional[BaseEntity] = None
         self.url = url
 
     def _send_request(self) -> Response:
@@ -36,13 +41,20 @@ class BaseSpider:
         response = self._send_request()
         return BeautifulSoup(response.content, 'html.parser')
 
-    def build_entity(self) -> BaseEntity:
-        raise NotImplementedError
-
-    def scrape(self) -> Optional[BaseEntity]:
+    def scrape(self) -> None:
         try:
             self.soup = self.cook_the_soup()
         except ValueError:
             print(f"Could not parse entity with url: {self.url}")
             return None
-        return self.build_entity()
+        self.entity = self.build_entity()
+
+    def store_as_json(self) -> None:
+        with tempfile.NamedTemporaryFile() as tmp:
+            with open(tmp.name, "w") as fp:
+                json.dump(asdict(self.entity), sort_keys=True, indent=4, fp=fp)
+            GcsService.upload(f"{self.__class__.__name__}.json", tmp.name)
+
+    def build_entity(self) -> BaseEntity:
+        raise NotImplementedError
+
