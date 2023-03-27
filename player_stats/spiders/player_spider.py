@@ -1,5 +1,7 @@
 import re
 from typing import Dict
+import pandas as pd
+from dataclasses import asdict
 
 from player_stats.spiders.base_spider import BaseSpider
 from player_stats.models.player import Player
@@ -31,7 +33,7 @@ class PlayerSpider(BaseSpider):
         stats_dict = dict(zip(stats_keys, stats_values))
 
         base_state = {
-            "birth_date": stats_dict.get("Geburtsdatum", None),
+            "birth_date": re.sub(r"Happy Birthday", "", stats_dict.get("Geburtsdatum", None)),
             "birth_place": stats_dict.get("Geburtsort", None),
             "age": int(stats_dict.get("Alter", None)),
             "height": int(re.sub(r"[,m]", "", stats_dict.get("Größe", None).replace(u'\xa0', u' '))),
@@ -50,13 +52,13 @@ class PlayerSpider(BaseSpider):
         name = self._name()
         print("Scraping player: " + name)
         base_stats = self._player_base_stats()
-        return Player(
+        self.entity = Player(
             name=name,
             age=base_stats["age"],
             birth_date=base_stats["birth_date"],
             height=base_stats["height"],
             place_of_birth=base_stats["birth_place"],
-            citenzenship=base_stats["nationality"],
+            citizenship=base_stats["nationality"],
             position=base_stats["position"],
             foot=base_stats["foot"],
             agent=base_stats["agent"],
@@ -65,3 +67,4 @@ class PlayerSpider(BaseSpider):
             contract_until=base_stats["contract_until"],
             last_contract_extension=base_stats["last_contract_extension"]
         )
+        return self.entity

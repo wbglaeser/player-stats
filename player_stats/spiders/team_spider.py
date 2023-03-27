@@ -1,5 +1,7 @@
 import re
 from typing import List, Optional
+from dataclasses import asdict
+import pandas as pd
 
 from player_stats.spiders.base_spider import BaseSpider
 from player_stats.spiders.player_spider import PlayerSpider
@@ -25,13 +27,15 @@ class TeamSpider(BaseSpider):
     def _players(self) -> List[Player | None]:
         players = []
         for link in self._players_links():
-            players.append(PlayerSpider(link).scrape())
+            player = PlayerSpider(link).scrape()
+            if player is not None:
+                players.append(player)
+            else:
+                print(f"Player not found at {link}")
         return players
 
-    def build_entity(self) -> Optional[Team]:
+    def build_entity(self) -> Team:
         name = self._name()
         players = self._players()
-        return Team(
-            name=name,
-            players=players
-        )
+        self.entity = Team(name=name, players=players)
+        return self.entity
