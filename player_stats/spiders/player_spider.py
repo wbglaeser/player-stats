@@ -1,10 +1,10 @@
 import re
 from typing import Dict
-import pandas as pd
-from dataclasses import asdict
 
 from player_stats.spiders.base_spider import BaseSpider
+from player_stats.spiders.player_performance_spider import PlayerPerformanceSpider
 from player_stats.models.player import Player
+from player_stats.models.player_performance import PlayerPerformance
 
 
 class PlayerSpider(BaseSpider):
@@ -48,10 +48,18 @@ class PlayerSpider(BaseSpider):
         }
         return base_state
 
+    def _player_detailed_stats(self) -> PlayerPerformance:
+        """ Initialise PlayerGamesSpider to fetch detailed stats for player."""
+        link_stump = list(filter(lambda link: "leistungsdaten" in link,
+                    [x["href"] for x in self.soup.find_all("a", {"class": "content-link"})]))[0]
+        link = "https://www.transfermarkt.de" + link_stump
+        return PlayerPerformanceSpider(link).scrape()
+
     def build_entity(self) -> Player:
         name = self._name()
         print("Scraping player: " + name)
         base_stats = self._player_base_stats()
+        performance_stats = self._player_detailed_stats()
         self.entity = Player(
             name=name,
             age=base_stats["age"],

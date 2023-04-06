@@ -132,4 +132,6 @@ dmypy.json
 .idea/
 
 # keys
-config/player-stats-credendials.json
+config/player-stats-credentials.json
+config/*.json
+config/*.base64
